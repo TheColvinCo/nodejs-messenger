@@ -3,7 +3,7 @@
   "description": "Message library for nodejs applications",
   "version": "1.0.3",
   "source": "src/main.ts",
-  "main": "dist/main.esm.js",
+  "main": "dist/main.js",
   "types": "dist/main.d.ts",
   "keywords": [
     "typescript"
