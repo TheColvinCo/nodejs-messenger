@@ -11,10 +11,10 @@ export default {
     eventName: string,
     handlerPath: string,
   }): Promise<void> {
-    const { default: defaultCommandHandler } = await import(resolve(handlerPath.trim()));
-    const { default: defaultCommand } = await import(resolve(handlerPath.replace('Handler', '').trim()));
-    const Handler = defaultCommandHandler.default || defaultCommandHandler;
-    const Command = defaultCommand.default || defaultCommand;
+    const resolvedHandlerModule = await import(resolve(handlerPath.trim()));
+    const resolvedCommandModule = await import(resolve(handlerPath.replace('Handler', '').trim()));
+    const Handler = resolvedHandlerModule['default'];
+    const Command = resolvedCommandModule['default'];
 
     emitter.on(eventName, (message) => {
       const handler = new Handler({

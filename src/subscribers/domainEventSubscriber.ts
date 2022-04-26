@@ -14,9 +14,8 @@ export default {
     commandsPath: Array<string>,
   }): Promise<void> {
     commandsPath.forEach(async (commandPath) => {
-      const { default: defaultCommand } = await import(resolve(commandPath.trim()));
-      const Command = defaultCommand.default || defaultCommand;
-
+      const resolvedModule = await import(resolve(commandPath.trim()));
+      const Command = resolvedModule['default'];
       emitter.on(eventName, (message) => {
         eventDispatcher.dispatch({ event: new Command({ message }) });
       });
