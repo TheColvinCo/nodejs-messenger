@@ -1,7 +1,7 @@
 {
   "name": "@thecolvinco/nodejs-messenger",
   "description": "Message library for nodejs applications",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "source": "src/main.ts",
   "main": "dist/main.js",
   "types": "dist/main.d.ts",
