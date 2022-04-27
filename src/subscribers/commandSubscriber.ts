@@ -11,8 +11,9 @@ export default {
     eventName: string,
     handlerPath: string,
   }): Promise<void> {
-    const resolvedHandlerModule = await import(resolve(handlerPath.trim()));
-    const resolvedCommandModule = await import(resolve(handlerPath.replace('Handler', '').trim()));
+    const absoluteHandlerPath = `${process.cwd()}/${handlerPath.trim()}`;
+    const resolvedHandlerModule = await import(resolve(absoluteHandlerPath));
+    const resolvedCommandModule = await import(resolve(absoluteHandlerPath.replace('Handler', '')));
     const Handler = resolvedHandlerModule['default'];
     const Command = resolvedCommandModule['default'];
 

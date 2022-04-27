@@ -14,7 +14,8 @@ export default {
     commandsPath: Array<string>,
   }): Promise<void> {
     commandsPath.forEach(async (commandPath) => {
-      const resolvedModule = await import(resolve(commandPath.trim()));
+      const absoluteCommandPath = `${process.cwd()}/${commandPath.trim()}`;
+      const resolvedModule = await import(resolve(absoluteCommandPath));
       const Command = resolvedModule['default'];
       emitter.on(eventName, (message) => {
         eventDispatcher.dispatch({ event: new Command({ message }) });
