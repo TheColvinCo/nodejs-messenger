@@ -17,11 +17,11 @@ export default {
     const Handler = resolvedHandlerModule['default'];
     const Command = resolvedCommandModule['default'];
 
-    emitter.on(eventName, (message) => {
+    emitter.on(eventName, async (message) => {
       const handler = new Handler({
         command: new Command({ message }),
       });
-      handler.handle();
+      await handler.handle();
     });
   },
 };

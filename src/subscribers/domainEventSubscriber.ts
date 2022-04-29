@@ -17,8 +17,8 @@ export default {
       const absoluteCommandPath = `${process.cwd()}/${commandPath.trim()}`;
       const resolvedModule = await import(resolve(absoluteCommandPath));
       const Command = resolvedModule['default'];
-      emitter.on(eventName, (message) => {
-        eventDispatcher.dispatch({ event: new Command({ message }) });
+      emitter.on(eventName, async (message) => {
+        await eventDispatcher.dispatch({ event: new Command({ message }) });
       });
     });
   },
