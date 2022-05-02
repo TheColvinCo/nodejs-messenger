@@ -90,7 +90,7 @@ export default class CommandConsumer {
       const { type: eventName } = data;
 
       try {
-        const onError = ({ error }) => {
+        const onError = () => {
           if (!retryPolicy) channel.nack(msg, false, false);
 
           const {
