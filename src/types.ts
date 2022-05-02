@@ -1,4 +1,5 @@
 import { Channel, Options, Message, ConsumeMessage } from 'amqplib';
+import { EventInterface, EventHandlerInterface } from './Interfaces';
 
 type queue = {
   name: string,
@@ -68,7 +69,7 @@ type messageBody = {
     messageId: string,
     occurredOn: number,
     type: string,
-    attributes: unknown,    
+    attributes: unknown,
   }
 };
 
@@ -116,7 +117,8 @@ type config = {
     }>,
     commands: Array<{
       eventName: string,
-      handlerPath: string,
+      handler: EventHandlerInterface,
+      commandPath: string,
     }>,
   },
   routing: {
@@ -127,10 +129,8 @@ type config = {
   }
 }
 
-interface EventInterface {
-  getName: () => string,
-  getCorrelationId: () => string,
-  getPayload: () => unknown
+interface EventDispatcher {
+  dispatch: ({ event: EventInterface }) => Promise<void>
 }
 
 export {
@@ -145,6 +145,8 @@ export {
   message,
   messageBody,
   config,
+  EventDispatcher,
   EventInterface,
+  EventHandlerInterface,
 };
 

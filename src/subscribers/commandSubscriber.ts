@@ -1,27 +1,27 @@
 import { resolve } from 'path';
 import { CommandEmitter } from '../emitter';
+import { EventHandlerInterface } from '../Interfaces';
+import { messageBody } from '../types';
 
 export default {
   async subscribe({
     emitter,
     eventName,
-    handlerPath,
+    handler,
+    commandPath,
   }: {
     emitter: CommandEmitter,
     eventName: string,
-    handlerPath: string,
+    handler: EventHandlerInterface,
+    commandPath: string,
   }): Promise<void> {
-    const absoluteHandlerPath = `${process.cwd()}/${handlerPath.trim()}`;
-    const resolvedHandlerModule = await import(resolve(absoluteHandlerPath));
-    const resolvedCommandModule = await import(resolve(absoluteHandlerPath.replace('Handler', '')));
-    const Handler = resolvedHandlerModule['default'];
+    const absoluteCommandPath = `${process.cwd()}/${commandPath.trim()}`;
+    const resolvedCommandModule = await import(resolve(absoluteCommandPath));
     const Command = resolvedCommandModule['default'];
 
-    emitter.on(eventName, async (message) => {
-      const handler = new Handler({
-        command: new Command({ message }),
-      });
-      await handler.handle();
+    emitter.on(eventName, async (message: messageBody) => {
+      const command = Command.fromPayload({ message });
+      await handler.handle(command);
     });
   },
 };

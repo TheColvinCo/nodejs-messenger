@@ -4,11 +4,9 @@ import {
   createCommand,
   createEvent,
 } from '../utils';
-import { 
-  config as configType, 
-  messageBody, 
-  EventInterface, 
-} from '../types';
+import { config as configType, messageBody } from '../types';
+import { EventInterface } from '../Interfaces';
+
 export default class EventDispatcher {
   private config: configType;
 
@@ -16,7 +14,7 @@ export default class EventDispatcher {
     this.config = config;
   }
 
-  async dispatch({ event }: { event: EventInterface}): Promise<void>{
+  async dispatch({ event }: { event: EventInterface }): Promise<void>{
     const eventClassname = event.constructor.name;
     const isCommand = /Command$/.test(eventClassname);
     const isEvent = /Event$/.test(eventClassname);
@@ -32,7 +30,7 @@ export default class EventDispatcher {
       }
 
       if (isEvent) {
-        this.asyncEventdDispatch({ eventConfig, event });
+        this.asyncEventDispatch({ eventConfig, event });
       }
     }
   }
@@ -40,7 +38,7 @@ export default class EventDispatcher {
   asyncDispatch = async ({
     eventConfig,
     messageBody
-  }:{ 
+  }:{
     eventConfig: {
       transport: string,
     },
@@ -101,7 +99,7 @@ export default class EventDispatcher {
     return this.asyncDispatch({ eventConfig, messageBody });
   };
 
-  asyncEventdDispatch = async ({
+  asyncEventDispatch = async ({
     eventConfig,
     event
   }: {

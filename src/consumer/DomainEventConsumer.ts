@@ -74,6 +74,7 @@ export default class DomainEventConsumer {
         emitter.emit(eventName, { message });
         channel.ack(msg);
       } catch (error) {
+        console.error(`Domain event consumer error occurred: ${error.message}`);
         channel.nack(msg, false, false);
       }
     };

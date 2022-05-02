@@ -10,7 +10,7 @@ const parse = ({ payload, meta, type }): messageBody => {
     entity,
     name,
   } = meta;
-  
+
   return {
     data: {
       messageId: uuidv4(),
@@ -22,23 +22,19 @@ const parse = ({ payload, meta, type }): messageBody => {
 };
 
 const createEvent = ({ payload, meta }: message): messageBody => {
-  const message = parse({ 
+  return parse({
     payload,
     meta,
     type: 'domain_event',
   });
-
-  return message;
 };
 
 const createCommand = ({ payload, meta }: message): messageBody => {
-  const message = parse({ 
+  return parse({
     payload,
     meta,
     type: 'command',
   });
-
-  return message;
 };
 
 const toJSON = (message: Message): any => {

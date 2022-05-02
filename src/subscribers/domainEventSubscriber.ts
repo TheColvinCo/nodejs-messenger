@@ -13,13 +13,13 @@ export default {
     eventName: string,
     commandsPath: Array<string>,
   }): Promise<void> {
-    commandsPath.forEach(async (commandPath) => {
+    for (const commandPath of commandsPath) {
       const absoluteCommandPath = `${process.cwd()}/${commandPath.trim()}`;
       const resolvedModule = await import(resolve(absoluteCommandPath));
       const Command = resolvedModule['default'];
       emitter.on(eventName, async (message) => {
-        await eventDispatcher.dispatch({ event: new Command({ message }) });
+        await eventDispatcher.dispatch({ event: Command.fromPayload({ message }) });
       });
-    });
+    }
   },
 };

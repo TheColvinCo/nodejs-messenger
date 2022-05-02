@@ -46,12 +46,13 @@ const subscribersInitialization = async ({
   }
 
   if (subscribers.commands) {
-    await Promise.all(subscribers.commands.map(async ({ eventName, handlerPath }) => {
+    await Promise.all(subscribers.commands.map(async ({ eventName, handler, commandPath }) => {
       try {
-        commandSubscriber.subscribe({
+        await commandSubscriber.subscribe({
           emitter: commandEmitter,
           eventName,
-          handlerPath,
+          handler,
+          commandPath,
         });
       } catch (error) {
         throw new Error(`Subscriber with event '${eventName}' not found. Error ${error.message}`);

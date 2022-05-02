@@ -6,7 +6,7 @@ import { Channel, Message } from 'amqplib';
 
 export default class CommandConsumer {
   private transports: configType['transports']
-  
+
   constructor({ config }: { config: configType}) {
     this.transports = config.transports;
   }
@@ -90,7 +90,7 @@ export default class CommandConsumer {
       const { type: eventName } = data;
 
       try {
-        const onError = () => {
+        const onError = ({ error }) => {
           if (!retryPolicy) channel.nack(msg, false, false);
 
           const {
@@ -120,6 +120,7 @@ export default class CommandConsumer {
         };
         emitter.emit(eventName, { message, onSuccess, onError });
       } catch (error) {
+        console.error(`Command consumer error occurred: ${error.message}`);
         channel.nack(msg, false, false);
       }
     };
