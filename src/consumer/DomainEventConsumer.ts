@@ -5,7 +5,7 @@ import { EventEmitter } from 'events';
 import { Channel, Message } from 'amqplib';
 
 export default class DomainEventConsumer {
-  private transports: configType['transports']
+  private readonly transports: configType['transports']
 
   constructor({ config }: { config: configType}) {
     this.transports = config.transports;
@@ -16,11 +16,13 @@ export default class DomainEventConsumer {
     queueName,
     prefetchValue,
     emitter = null,
+    onError,
   }: {
     transport: string,
     queueName: string,
     prefetchValue: number,
-    emitter?: EventEmitter
+    emitter?: EventEmitter,
+    onError: (error: Error) => void,
   }): Promise<void>{
     if (!this.transports[transport]) {
       throw Error(`Transport ${transport} is not defined`);
@@ -47,7 +49,7 @@ export default class DomainEventConsumer {
         : emitter;
 
       const consumerData = {
-        onMessage: this.workable({ channel, emitter: domainEventsEmitter }),
+        onMessage: this.workable({ channel, emitter: domainEventsEmitter, onError }),
         options: {
           noAck: false,
         },
@@ -59,12 +61,13 @@ export default class DomainEventConsumer {
         consumerData.options,
       );
     } catch (error) {
+      if (onError) onError(error);
       connection.close();
       throw error;
     }
   }
 
-  workable({ channel, emitter }: { channel: Channel, emitter: EventEmitter }) {
+  workable({ channel, emitter, onError }: { channel: Channel, emitter: EventEmitter, onError: (error: Error) => void }) {
     return async (msg: Message): Promise<void> => {
       const message = toJSON(msg);
       const { data } = message;
@@ -74,6 +77,8 @@ export default class DomainEventConsumer {
         emitter.emit(eventName, { message });
         channel.ack(msg);
       } catch (error) {
+        if (onError) onError(error);
+        console.error(`Domain event consumer error occurred: ${error.message}`);
         channel.nack(msg, false, false);
       }
     };

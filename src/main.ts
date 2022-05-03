@@ -3,6 +3,7 @@ import { CommandConsumer, DomainEventConsumer } from './consumer';
 import { pubSubInitialization, transportsInitialization } from './container';
 import { CommandEmitter, DomainEventEmitter, EventDispatcher } from './emitter';
 import { commandSubscriber, domainEventSubscriber } from './subscribers';
+import { Event, Command, DomainEvent } from './Events';
 
 export {
   amqpConnect,
@@ -21,5 +22,8 @@ export {
   DomainEventEmitter,
   EventDispatcher,
   commandSubscriber,
-  domainEventSubscriber
+  domainEventSubscriber,
+  Event,
+  Command,
+  DomainEvent,
 };
