@@ -9,7 +9,7 @@ export abstract class Event implements EventInterface {
   abstract getActionName(): string;
   abstract getContext (): string;
   abstract getCompany (): string;
-  abstract getPayload <T = unknown>(): T;
+  abstract getPayload (): unknown;
 
   protected getVersion (): string {
     return '1';

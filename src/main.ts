@@ -4,6 +4,7 @@ import { pubSubInitialization, transportsInitialization } from './container';
 import { CommandEmitter, DomainEventEmitter, EventDispatcher } from './emitter';
 import { commandSubscriber, domainEventSubscriber } from './subscribers';
 import { Event, Command, DomainEvent } from './Events';
+import { EventHandlerInterface, EventInterface } from './Interfaces';
 
 export {
   amqpConnect,
@@ -26,4 +27,6 @@ export {
   Event,
   Command,
   DomainEvent,
+  EventHandlerInterface,
+  EventInterface,
 };
