@@ -12,7 +12,7 @@ This library give you some classes, functions, types and interfaces ready to use
 * Create your consumers
 
 ### Create a config file with a required structure
-You have to create a file with this structure. Later you must to import this file so you can put it in any place. Let's see an example explained
+You have to create a file with this structure or a callable which returns this structure (up to you). Later you must to import this file so you can put it in any place. Let's see an example explained
 
 ```js
 export default {
@@ -35,6 +35,7 @@ export default {
           retryPolicy: { // The retries policiy for this trasnport. The retries will be try in a exponential way (firstly in 2s, secondly in 4s, lastly in 6s)
             maxRetries: 3,
             delay: 2000,
+            retryExchangeName: 'blom.superapp.retry.exchange',
           },
         },
       ],
@@ -55,7 +56,8 @@ export default {
     commands: [
       {
         eventName: 'blom.accounting.1.command.order.syncronize_order', // The event which the built-in command subscribers will subscribe it
-        handlerPath: 'server/events/orders/command/SyncronizeOrderCommandHandler.js', // The handler which will be invoke passing their Command as argument
+        handlerFactory: () => new SyncronizeOrderCommandHandler(), // The handler which will be invoke passing their Command as argument
+        commandPath: 'server/events/orders/command/SendOrderNotificationCommand.js' // The command path
       },
       // <--- Other commands goes here
     ],
@@ -89,53 +91,72 @@ import config from 'path-to-your-config-file';
 ### Create your events and commands with their respective handlers
 This is an example for a Command
 ```js
-export default class SendOrderNotificationCommand {
-  constructor({ message }) {
-    this.message = message;
+export default class CreateProductToAlgoliaCommand extends Command {
+  readonly product: { userId: string; id: string; };
+
+  constructor ({ product }) {
+    super();
+    this.product = product;
   }
 
-  getName() {
-    return 'blom.accounting.1.command.order.send_notification';
+  getActionName (): string {
+    return 'create_algolia';
   }
 
-  getPayload() {
-    return this.message.data.attributes;
+  getEntity (): string {
+    return 'product';
   }
 
-  getCorrelationId() {
-    return this.message.data.messageId || null;
+  static fromPayload ({ message }): CreateProductToAlgoliaCommand {
+    const { product } = message.data.attributes;
+    return new CreateProductToAlgoliaCommand({ product });
+  }
+
+  getPayload () {
+    return {
+      product: this.product,
+    };
   }
 }
+
 ```
 This is an example for a command handler
 ```js
-export default class SendOrderNotificationCommandHandler {
-  constructor({ command }) {
-    this.command = command;
-  }
-
-  handle() {
-    console.log('Do something!');
+export default class CreateProductToAlgoliaCommandHandler {
+  // Some constructor with some deps here
+  
+  async handle (command: CreateProductToAlgoliaCommand) {
+    const { product } = command;
+    
+    // Do something here!
   }
 }
+
 ```
 ---
-### Create your consumers
+### Consumers example
 ```js
 import { CommandConsumer } from '@thecolvinco/nodejs-messenger';
-import config from 'path-to-your-config';
+import eventsConfig from '../../config/events.config.js';
+import container from '../container';
 
-const commandConsumer = new CommandConsumer({ config });
+const { commandEmitter, logger } = container;
+
+const commandConsumer = new CommandConsumer({ config: eventsConfig({ container }) });
 
 commandConsumer.consume({
-  transport: 'accounting_commands',
-  queueName: 'blom.accounting.commands', 
+  emitter: commandEmitter,
+  prefetchValue: 1,
+  transport: 'superapp_commands',
+  queueName: 'blom.superapp.commands',
+  onError: (error: Error) => logger.error(error.message, { tags: ['commands-consumer'] }),
 }).then(() => {
   console.info('Waiting for messages....');
 }).catch(error => {
   console.error(error.message);
   process.exit();
 });
+
 
 ```
 ### About
