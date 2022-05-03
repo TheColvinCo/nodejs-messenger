@@ -8,14 +8,11 @@ export abstract class Event implements EventInterface {
   abstract getEntity(): string;
   abstract getActionName(): string;
   abstract getContext (): string;
-  abstract getPayload (): unknown;
+  abstract getCompany (): string;
+  abstract getPayload <T = unknown>(): T;
 
   protected getVersion (): string {
     return '1';
-  }
-
-  protected getCompany(): string {
-    return 'blom';
   }
 
   getName (): string {

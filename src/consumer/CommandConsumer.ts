@@ -5,7 +5,7 @@ import { EventEmitter } from 'events';
 import { Channel, Message } from 'amqplib';
 
 export default class CommandConsumer {
-  private transports: configType['transports']
+  private readonly transports: configType['transports']
 
   constructor({ config }: { config: configType}) {
     this.transports = config.transports;
@@ -16,11 +16,13 @@ export default class CommandConsumer {
     queueName,
     prefetchValue,
     emitter = null,
+    onError,
   }: {
     transport: string,
     queueName: string,
     prefetchValue: number,
     emitter?: EventEmitter
+    onError: (error: Error) => void,
   }): Promise<void> {
     if (!this.transports[transport]) {
       throw Error(`Transport ${transport} is not defined`);
@@ -53,6 +55,7 @@ export default class CommandConsumer {
         emitter: commandEmitter,
         retryPolicy,
         queueName,
+        onError,
       });
 
       channel.consume(
@@ -63,6 +66,7 @@ export default class CommandConsumer {
         },
       );
     } catch (error) {
+      if (onError) onError(error);
       connection.close();
       throw error;
     }
@@ -73,6 +77,7 @@ export default class CommandConsumer {
     emitter,
     retryPolicy,
     queueName,
+    onError
   }: {
     channel: Channel,
     emitter: EventEmitter,
@@ -83,6 +88,7 @@ export default class CommandConsumer {
       onRejected?: (message: Message) => void
     },
     queueName: string,
+    onError: (error: Error) => void,
   }) {
     return async (msg: Message): Promise<void> => {
       const message = toJSON(msg);
@@ -90,8 +96,10 @@ export default class CommandConsumer {
       const { type: eventName } = data;
 
       try {
-        const onError = () => {
+        const onErrorCallback = ({ error }) => {
           if (!retryPolicy) channel.nack(msg, false, false);
+
+          if (onError) onError(error);
 
           const {
             maxRetries,
@@ -118,9 +126,9 @@ export default class CommandConsumer {
         const onSuccess = () => {
           channel.ack(msg);
         };
-        emitter.emit(eventName, { message, onSuccess, onError });
+        emitter.emit(eventName, { message, onSuccess, onError: onErrorCallback });
       } catch (error) {
-        console.error(`Command consumer error occurred: ${error.message}`);
+        if (onError) onError(error);
         channel.nack(msg, false, false);
       }
     };
