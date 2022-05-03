@@ -46,12 +46,12 @@ const subscribersInitialization = async ({
   }
 
   if (subscribers.commands) {
-    await Promise.all(subscribers.commands.map(async ({ eventName, handler, commandPath }) => {
+    await Promise.all(subscribers.commands.map(async ({ eventName, handlerFactory, commandPath }) => {
       try {
         await commandSubscriber.subscribe({
           emitter: commandEmitter,
           eventName,
-          handler,
+          handlerFactory,
           commandPath,
         });
       } catch (error) {

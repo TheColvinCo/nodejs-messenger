@@ -117,7 +117,7 @@ type config = {
     }>,
     commands: Array<{
       eventName: string,
-      handler: EventHandlerInterface,
+      handlerFactory: () => EventHandlerInterface,
       commandPath: string,
     }>,
   },

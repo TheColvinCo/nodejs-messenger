@@ -7,12 +7,12 @@ export default {
   async subscribe({
     emitter,
     eventName,
-    handler,
+    handlerFactory,
     commandPath,
   }: {
     emitter: CommandEmitter,
     eventName: string,
-    handler: EventHandlerInterface,
+    handlerFactory: () => EventHandlerInterface,
     commandPath: string,
   }): Promise<void> {
     const absoluteCommandPath = `${process.cwd()}/${commandPath.trim()}`;
@@ -21,7 +21,7 @@ export default {
 
     emitter.on(eventName, async (message: messageBody) => {
       const command = Command.fromPayload({ message });
-      await handler.handle(command);
+      await handlerFactory().handle(command);
     });
   },
 };
