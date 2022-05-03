@@ -16,10 +16,14 @@ export default {
     for (const commandPath of commandsPath) {
       const absoluteCommandPath = `${process.cwd()}/${commandPath.trim()}`;
       const resolvedModule = await import(resolve(absoluteCommandPath));
-      const Command = resolvedModule['default'];
-      emitter.on(eventName, async (message) => {
-        await eventDispatcher.dispatch({ event: Command.fromPayload({ message }) });
-      });
+      const resolvedModuleKey = Object.keys(resolvedModule)[0];
+      const Command = resolvedModule[resolvedModuleKey];
+
+      if (Command) {
+        emitter.on(eventName, async (message) => {
+          await eventDispatcher.dispatch({ event: Command.fromPayload({ message }) });
+        });
+      }
     }
   },
 };
