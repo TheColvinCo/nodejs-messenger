@@ -1,4 +1,4 @@
-import { amqpConnect, toJSON } from '../utils';
+import { amqpConnect, toJSON } from './index';
 import { config as configType, messageBody } from '../types';
 
 export default class MessageDeleter {
@@ -102,10 +102,6 @@ export default class MessageDeleter {
       beforeOccurredOn?: number,
     }
   }) {
-    console.log(      type,
-      messageId,
-      afterOccurredOn,
-      beforeOccurredOn,);
     const messageIdAsserted = !messageId || messageId === message.data.messageId;
     const typeAsserted = !type || type === message.data.type;
     const afterOccurredOnAsserted = !afterOccurredOn || afterOccurredOn < message.data.occurredOn;

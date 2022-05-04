@@ -3,6 +3,7 @@ import producer from './producer';
 import worker from './worker';
 import deadLetter from './deadLetter';
 import retryable from './retryable';
+import MessageDeleter from './MessageDeleter';
 import { amqpConnect } from './connection';
 
 export {
@@ -14,4 +15,5 @@ export {
   deadLetter,
   retryable,
   amqpConnect,
+  MessageDeleter,
 };

@@ -1,5 +1,4 @@
-import { createEvent, createCommand, toJSON, producer, worker, deadLetter, retryable, amqpConnect } from './utils';
-import { MessageDeleter } from './commands';
+import { createEvent, createCommand, toJSON, producer, worker, deadLetter, retryable, amqpConnect, MessageDeleter } from './utils';
 import { CommandConsumer, DomainEventConsumer } from './consumer';
 import { pubSubInitialization, transportsInitialization } from './container';
 import { CommandEmitter, DomainEventEmitter, EventDispatcher } from './emitter';
@@ -16,9 +15,9 @@ export {
   createEvent,
   createCommand,
   toJSON,
+  MessageDeleter,
   CommandConsumer,
   DomainEventConsumer,
-  MessageDeleter,
   pubSubInitialization,
   transportsInitialization,
   CommandEmitter,
