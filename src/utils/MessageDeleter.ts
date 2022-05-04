@@ -1,4 +1,5 @@
-import { amqpConnect, toJSON } from './index';
+import { amqpConnect } from './connection';
+import { toJSON } from './message';
 import { config as configType, messageBody } from '../types';
 
 export default class MessageDeleter {
