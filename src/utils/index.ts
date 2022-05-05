@@ -4,6 +4,7 @@ import worker from './worker';
 import deadLetter from './deadLetter';
 import retryable from './retryable';
 import MessageDeleter from './MessageDeleter';
+import MessageShifter from './MessageShifter';
 import { amqpConnect } from './connection';
 
 export {
@@ -16,4 +17,5 @@ export {
   retryable,
   amqpConnect,
   MessageDeleter,
+  MessageShifter,
 };

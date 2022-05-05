@@ -18,6 +18,4 @@ export default async ({
     key,
     Buffer.from(message)
   );
-  
-  await channel.close();
 };

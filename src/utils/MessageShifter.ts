@@ -1,15 +1,20 @@
 import { amqpConnect } from './connection';
 import { toJSON } from './message';
 import { config as configType, messageBody } from '../types';
+import producer from './producer';
 
-export default class MessageDeleter {
-  private transports: configType['transports']
+export default class MessageShifter {
+  private config: configType;
 
   constructor({ config }: { config: configType}) {
-    this.transports = config.transports;
+    this.config = config;
   }
 
   async consume({
+    targetExchange,
+    transport,
+    originQueueName,
+    prefetchValue,
     filters: {
       limit = Infinity,
       type,
@@ -17,12 +22,10 @@ export default class MessageDeleter {
       afterOccurredOn,
       beforeOccurredOn,
     },
-    transport,
-    queueName,
-    prefetchValue,
   }: {
+    targetExchange: string,
     transport: string,
-    queueName: string,
+    originQueueName: string,
     prefetchValue: number,
     filters: {
       limit?: number,
@@ -32,12 +35,18 @@ export default class MessageDeleter {
       beforeOccurredOn?: number
     }
   }): Promise<void> {
-    if (!this.transports[transport]) {
+    if (!this.config.transports[transport]) {
       throw Error(`Transport ${transport} is not defined`);
     }
 
-    const { connectionString, queues } = this.transports[transport];
-    const queue = queues.find(({ name }) => name === queueName);
+    console.log({targetExchange,
+      transport,
+      originQueueName,
+      prefetchValue})
+
+    const exchange = this.getExchangeConfig(targetExchange);
+    const { connectionString, queues } = this.config.transports[transport];
+    const queue = queues.find(({ name }) => name === originQueueName);
 
     if (!queue) {
       throw Error(`Queue ${queue} is not defined`);
@@ -53,21 +62,30 @@ export default class MessageDeleter {
       }
 
       const assertQueue = await channel.assertQueue(
-        queueName,
+        originQueueName,
       );
-
+      
       let maxMessages = assertQueue.messageCount;
 
       while (maxMessages > 0 && limit > 0) {
         const message = await channel.get(
-          queueName,
+          originQueueName,
         );
-
+        
         if (message !== false) {
-          if (this.isDeletable({
-            message: toJSON(message),
+          const parsedMessage = toJSON(message);
+
+          if (this.isShifteable({
+            message: parsedMessage,
             filters: {type, messageId, afterOccurredOn, beforeOccurredOn},
           })) {
+            await producer({
+              channel,
+              message: message.content.toString(),
+              key: parsedMessage.data.type,
+              exchange,
+            });
+
             channel.ack(message);
             --limit;
           }
@@ -86,7 +104,28 @@ export default class MessageDeleter {
     await connection.close();
   }
 
-  isDeletable({
+  getExchangeConfig(exchangeName: string) {
+    const { transports } = this.config;
+    
+    const exchangeConfig = Object.entries(transports).reduce((acc, [_, transport]) => {
+      const {
+        exchange,
+      } = transport;
+      
+      return {
+        ...acc,
+        [exchange.name]: exchange
+      };
+    }, {});
+
+    const assertedConfig = exchangeConfig[exchangeName];
+
+    if (!assertedConfig) throw Error(`Exchange ${exchangeName} doesn't exists`);
+
+    return assertedConfig;
+  }
+
+  isShifteable({
     message,
     filters: {
       type,

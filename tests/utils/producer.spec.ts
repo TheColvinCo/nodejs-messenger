@@ -54,8 +54,6 @@ describe('producer', () => {
         key,
         Buffer.from(message)
       );
-
-      expect(channel.close).toBeCalledTimes(1);
     });
   });
 });
