@@ -39,11 +39,6 @@ export default class MessageShifter {
       throw Error(`Transport ${transport} is not defined`);
     }
 
-    console.log({targetExchange,
-      transport,
-      originQueueName,
-      prefetchValue})
-
     const exchange = this.getExchangeConfig(targetExchange);
     const { connectionString, queues } = this.config.transports[transport];
     const queue = queues.find(({ name }) => name === originQueueName);
