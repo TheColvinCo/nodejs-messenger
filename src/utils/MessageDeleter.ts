@@ -3,7 +3,7 @@ import { toJSON } from './message';
 import { config as configType, messageBody } from '../types';
 
 export default class MessageDeleter {
-  private transports: configType['transports']
+  private readonly transports: configType['transports']
 
   constructor({ config }: { config: configType}) {
     this.transports = config.transports;

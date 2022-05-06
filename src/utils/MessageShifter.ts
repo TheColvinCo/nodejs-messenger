@@ -4,7 +4,7 @@ import { config as configType, messageBody } from '../types';
 import producer from './producer';
 
 export default class MessageShifter {
-  private config: configType;
+  private readonly config: configType;
 
   constructor({ config }: { config: configType}) {
     this.config = config;
@@ -59,14 +59,14 @@ export default class MessageShifter {
       const assertQueue = await channel.assertQueue(
         originQueueName,
       );
-      
+
       let maxMessages = assertQueue.messageCount;
 
       while (maxMessages > 0 && limit > 0) {
         const message = await channel.get(
           originQueueName,
         );
-        
+
         if (message !== false) {
           const parsedMessage = toJSON(message);
 
@@ -101,12 +101,12 @@ export default class MessageShifter {
 
   getExchangeConfig(exchangeName: string) {
     const { transports } = this.config;
-    
+
     const exchangeConfig = Object.entries(transports).reduce((acc, [_, transport]) => {
       const {
         exchange,
       } = transport;
-      
+
       return {
         ...acc,
         [exchange.name]: exchange
