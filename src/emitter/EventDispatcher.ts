@@ -26,11 +26,11 @@ export default class EventDispatcher {
 
     if (eventConfig.async === true || eventConfig.async === undefined) {
       if (isCommand) {
-        this.asyncCommandDispatch({ eventConfig, event });
+        await this.asyncCommandDispatch({ eventConfig, event });
       }
 
       if (isEvent) {
-        this.asyncEventDispatch({ eventConfig, event });
+        await this.asyncEventDispatch({ eventConfig, event });
       }
     }
   }
@@ -67,10 +67,10 @@ export default class EventDispatcher {
         exchange,
       });
 
-      connection.close();
+      await connection.close();
       return true;
     } catch (error) {
-      connection.close();
+      await connection.close();
       return false;
     }
   };
