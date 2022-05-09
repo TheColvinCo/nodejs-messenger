@@ -43,7 +43,7 @@ export default class EventDispatcher {
       transport: string,
     },
     messageBody: messageBody
-  }): Promise<boolean> => {
+  }): Promise<void> => {
     const {
       transport,
     } = eventConfig;
@@ -54,9 +54,9 @@ export default class EventDispatcher {
     } = this.config.transports[transport];
 
     const connection = await amqpConnect(connectionString);
+    const channel = await connection.createChannel();
 
     try {
-      const channel = await connection.createChannel();
       const { type: key } = messageBody.data;
       const message = JSON.stringify(messageBody);
 
@@ -66,12 +66,9 @@ export default class EventDispatcher {
         key,
         exchange,
       });
-
+    } finally {
+      await channel.close();
       await connection.close();
-      return true;
-    } catch (error) {
-      await connection.close();
-      return false;
     }
   };
 
@@ -83,7 +80,7 @@ export default class EventDispatcher {
       transport: string,
     },
     event: EventInterface
-  }): Promise<boolean> => {
+  }): Promise<void> => {
     const [company, context, version, , entity, name] = event.getName().split('.');
     const messageBody = createCommand({
       payload: event.getPayload(),
@@ -107,7 +104,7 @@ export default class EventDispatcher {
       transport: string,
     },
     event: EventInterface
-  }): Promise<boolean> => {
+  }): Promise<void> => {
     const [company, context, version, , entity, name] = event.getName().split('.');
     const messageBody = createEvent({
       payload: event.getPayload(),
