@@ -66,7 +66,10 @@ export default class EventDispatcher {
         key,
         exchange,
       });
-    } finally {
+
+      await channel.close();
+      await connection.close();
+    } catch (e) {
       await channel.close();
       await connection.close();
     }
