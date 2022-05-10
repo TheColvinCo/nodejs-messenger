@@ -29,11 +29,11 @@ const subscribersInitialization = async ({
   eventDispatcher: EventDispatcher,
   domainEventEmitter: EventEmitter,
   commandEmitter: EventEmitter,
-}) => {
+}): Promise<void> => {
   if (subscribers.domainEvents) {
     await Promise.all(subscribers.domainEvents.map(async ({ eventName, commandsPath }) => {
       try {
-        domainEventSubscriber.subscribe({
+        await domainEventSubscriber.subscribe({
           eventDispatcher,
           emitter: domainEventEmitter,
           eventName,
@@ -61,17 +61,17 @@ const subscribersInitialization = async ({
   }
 };
 
-export const pubSubInitialization = (({ config }: { config: configType }): {
+export const pubSubInitialization = (async ({ config }: { config: configType }): Promise<{
   eventDispatcher: EventDispatcher,
   domainEventEmitter: EventEmitter,
   commandEmitter: EventEmitter,
-} => {
+}> => {
   const eventDispatcher = new EventDispatcher({ config });
   domainEventEmitter = new DomainEventEmitter();
   commandEmitter = new CommandEmitter();
   const { subscribers } = config;
 
-  subscribersInitialization({
+  await subscribersInitialization({
     subscribers,
     eventDispatcher,
     domainEventEmitter,
