@@ -17,7 +17,7 @@ export const getDomainEventsEmitter = (): EventEmitter => {
   return domainEventEmitter;
 };
 
-const subscribersInitialization = async ({
+const subscribersInitialization = ({
   subscribers,
   eventDispatcher,
   // eslint-disable-next-line no-shadow
@@ -29,9 +29,9 @@ const subscribersInitialization = async ({
   eventDispatcher: EventDispatcher,
   domainEventEmitter: EventEmitter,
   commandEmitter: EventEmitter,
-}): Promise<void> => {
+}): void => {
   if (subscribers.domainEvents) {
-    await Promise.all(subscribers.domainEvents.map(async ({ eventName, commandsPath }) => {
+    subscribers.domainEvents.map(async ({ eventName, commandsPath }) => {
       try {
         await domainEventSubscriber.subscribe({
           eventDispatcher,
@@ -42,11 +42,11 @@ const subscribersInitialization = async ({
       } catch (error) {
         throw new Error(`Subscriber with event '${eventName}' not found. Error ${error.message}`);
       }
-    }));
+    });
   }
 
   if (subscribers.commands) {
-    await Promise.all(subscribers.commands.map(async ({ eventName, handlerFactory, commandPath }) => {
+    subscribers.commands.map(async ({ eventName, handlerFactory, commandPath }) => {
       try {
         await commandSubscriber.subscribe({
           emitter: commandEmitter,
@@ -57,21 +57,21 @@ const subscribersInitialization = async ({
       } catch (error) {
         throw new Error(`Subscriber with event '${eventName}' not found. Error ${error.message}`);
       }
-    }));
+    });
   }
 };
 
-export const pubSubInitialization = (async ({ config }: { config: configType }): Promise<{
+export const pubSubInitialization = (({ config }: { config: configType }): {
   eventDispatcher: EventDispatcher,
   domainEventEmitter: EventEmitter,
   commandEmitter: EventEmitter,
-}> => {
+} => {
   const eventDispatcher = new EventDispatcher({ config });
   domainEventEmitter = new DomainEventEmitter();
   commandEmitter = new CommandEmitter();
   const { subscribers } = config;
 
-  await subscribersInitialization({
+  subscribersInitialization({
     subscribers,
     eventDispatcher,
     domainEventEmitter,
