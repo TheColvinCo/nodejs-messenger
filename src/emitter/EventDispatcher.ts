@@ -94,6 +94,7 @@ export default class EventDispatcher {
         entity,
         name,
       },
+      entityId: event.getEntityId(),
     });
 
     return this.asyncDispatch({ eventConfig, messageBody });
@@ -118,6 +119,7 @@ export default class EventDispatcher {
         entity,
         name,
       },
+      entityId: event.getEntityId(),
     });
 
     return this.asyncDispatch({ eventConfig, messageBody });

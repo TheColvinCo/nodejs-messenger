@@ -68,6 +68,7 @@ type messageBody = {
   data: {
     messageId: string,
     occurredOn: number,
+    entityId: string,
     type: string,
     attributes: unknown,
   }
@@ -75,6 +76,7 @@ type messageBody = {
 
 type message = {
   payload: unknown,
+  entityId: string,
   meta: {
     company: string,
     context: string,

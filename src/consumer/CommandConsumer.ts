@@ -17,12 +17,20 @@ export default class CommandConsumer {
     prefetchValue,
     emitter = null,
     onError,
+    eventualConsistency = {
+      isConsistent: async (message: any)=> true,
+      saveMessage: async (message: any) => undefined,
+    },
   }: {
     transport: string,
     queueName: string,
     prefetchValue: number,
-    emitter?: EventEmitter
+    emitter?: EventEmitter,
     onError: (error: Error) => void,
+    eventualConsistency: {
+      isConsistent: (message: any) => Promise<boolean>,
+      saveMessage?: (message: any) => Promise<void>
+    },
   }): Promise<void> {
     if (!this.transports[transport]) {
       throw Error(`Transport ${transport} is not defined`);
@@ -56,6 +64,7 @@ export default class CommandConsumer {
         retryPolicy,
         queueName,
         onError,
+        eventualConsistency,
       });
 
       channel.consume(
@@ -77,7 +86,8 @@ export default class CommandConsumer {
     emitter,
     retryPolicy,
     queueName,
-    onError
+    onError,
+    eventualConsistency,
   }: {
     channel: Channel,
     emitter: EventEmitter,
@@ -89,6 +99,10 @@ export default class CommandConsumer {
     },
     queueName: string,
     onError: (error: Error) => void,
+    eventualConsistency: {
+      isConsistent: (message: any) => Promise<boolean>,
+      saveMessage?: (message: any) => Promise<void>
+    }
   }) {
     return async (msg: Message): Promise<void> => {
       const message = toJSON(msg);
@@ -126,6 +140,14 @@ export default class CommandConsumer {
         const onSuccess = () => {
           channel.ack(msg);
         };
+
+        const isConsistent = await eventualConsistency.isConsistent(message);
+        if(isConsistent) {
+          channel.ack(msg);
+         return;
+        }
+
+        eventualConsistency.saveMessage && await eventualConsistency.saveMessage(message);
         emitter.emit(eventName, { message, onSuccess, onError: onErrorCallback });
       } catch (error) {
         if (onError) onError(error);

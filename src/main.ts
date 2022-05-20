@@ -5,6 +5,7 @@ import { CommandEmitter, DomainEventEmitter, EventDispatcher } from './emitter';
 import { commandSubscriber, domainEventSubscriber } from './subscribers';
 import { Event, Command, DomainEvent } from './Events';
 import { EventHandlerInterface, EventInterface } from './Interfaces';
+import { messageBody } from './types';
 
 export {
   amqpConnect,
@@ -30,4 +31,5 @@ export {
   DomainEvent,
   EventHandlerInterface,
   EventInterface,
+  messageBody,
 };

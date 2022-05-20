@@ -7,9 +7,10 @@ export abstract class Event implements EventInterface {
   abstract getEventType(): string;
   abstract getEntity(): string;
   abstract getActionName(): string;
-  abstract getContext (): string;
-  abstract getCompany (): string;
-  abstract getPayload (): unknown;
+  abstract getContext(): string;
+  abstract getCompany(): string;
+  abstract getPayload(): unknown;
+  abstract getEntityId(): string;
 
   protected getVersion (): string {
     return '1';
