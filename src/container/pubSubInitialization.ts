@@ -1,10 +1,10 @@
-import EventDispatcher from '../emitter/EventDispatcher.js';
-import DomainEventEmitter from '../emitter/DomainEventEmitter.js';
-import CommandEmitter from '../emitter/CommandEmitter.js';
-import domainEventSubscriber from '../subscribers/domainEventSubscriber.js';
-import commandSubscriber from '../subscribers/commandSubscriber.js';
+import EventDispatcher from '../emitter/EventDispatcher';
+import DomainEventEmitter from '../emitter/DomainEventEmitter';
+import CommandEmitter from '../emitter/CommandEmitter';
+import domainEventSubscriber from '../subscribers/domainEventSubscriber';
+import commandSubscriber from '../subscribers/commandSubscriber';
 import { EventEmitter } from 'events';
-import { config as configType } from '../types';
+import { config as configType, messageBody } from "../types";
 
 let commandEmitter = null;
 let domainEventEmitter = null;
@@ -61,12 +61,16 @@ const subscribersInitialization = ({
   }
 };
 
-export const pubSubInitialization = (({ config }: { config: configType }): {
+export const pubSubInitialization = (({ config, onDispatched }: {
+  config: configType,
+  onDispatched?: ({ message, key, exchangeName }: { message: messageBody; key: string; exchangeName: string; }) => void
+}): {
   eventDispatcher: EventDispatcher,
   domainEventEmitter: EventEmitter,
   commandEmitter: EventEmitter,
 } => {
-  const eventDispatcher = new EventDispatcher({ config });
+  console.log('onDispatched', onDispatched);
+  const eventDispatcher = new EventDispatcher({ config, onDispatched });
   domainEventEmitter = new DomainEventEmitter();
   commandEmitter = new CommandEmitter();
   const { subscribers } = config;
