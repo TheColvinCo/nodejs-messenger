@@ -9,9 +9,11 @@ import { EventInterface } from '../Interfaces';
 
 export default class EventDispatcher {
   private config: configType;
+  private readonly onDispatched: ({ message, key, exchangeName }: { message: messageBody; key: string; exchangeName: string; }) => void;
 
-  constructor({ config }: { config: configType }) {
+  constructor({ config, onDispatched }: { config: configType, onDispatched?: ({ message, key, exchangeName }: { message: messageBody; key: string; exchangeName: string; }) => void }) {
     this.config = config;
+    this.onDispatched = onDispatched;
   }
 
   async dispatch({ event }: { event: EventInterface }): Promise<void>{
@@ -66,6 +68,14 @@ export default class EventDispatcher {
         key,
         exchange,
       });
+
+      if (typeof this.onDispatched === 'function') {
+        this.onDispatched({
+          message: messageBody,
+          key,
+          exchangeName: exchange.name
+        });
+      }
 
       await channel.close();
       await connection.close();
