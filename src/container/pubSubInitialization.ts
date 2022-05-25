@@ -69,7 +69,7 @@ export const pubSubInitialization = (({ config, onDispatched }: {
   domainEventEmitter: EventEmitter,
   commandEmitter: EventEmitter,
 } => {
-  console.log('onDispatched', onDispatched);
+
   const eventDispatcher = new EventDispatcher({ config, onDispatched });
   domainEventEmitter = new DomainEventEmitter();
   commandEmitter = new CommandEmitter();
