@@ -88,7 +88,7 @@ type message = {
 
 type config = {
   transports: {
-    key: {
+    [key: string]: {
       connectionString: string,
       exchange: {
         name: string,

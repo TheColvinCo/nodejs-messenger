@@ -1,5 +1,5 @@
 import { amqpConnect, toJSON } from '../utils';
-import { getDomainEventsEmitter } from '../container/pubSubInitialization.js';
+import { getDomainEventsEmitter } from '../container/pubSubInitialization';
 import { config as configType } from '../types';
 import { EventEmitter } from 'events';
 import { Channel, Message } from 'amqplib';

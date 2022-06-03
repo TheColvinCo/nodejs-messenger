@@ -9,9 +9,11 @@ import { EventInterface } from '../Interfaces';
 
 export default class EventDispatcher {
   private config: configType;
+  private readonly onDispatched: ({ message, key, exchangeName }: { message: messageBody; key: string; exchangeName: string; }) => void;
 
-  constructor({ config }: { config: configType }) {
+  constructor({ config, onDispatched }: { config: configType, onDispatched?: ({ message, key, exchangeName }: { message: messageBody; key: string; exchangeName: string; }) => void }) {
     this.config = config;
+    this.onDispatched = onDispatched;
   }
 
   async dispatch({ event }: { event: EventInterface }): Promise<void>{
@@ -26,11 +28,11 @@ export default class EventDispatcher {
 
     if (eventConfig.async === true || eventConfig.async === undefined) {
       if (isCommand) {
-        this.asyncCommandDispatch({ eventConfig, event });
+        await this.asyncCommandDispatch({ eventConfig, event });
       }
 
       if (isEvent) {
-        this.asyncEventDispatch({ eventConfig, event });
+        await this.asyncEventDispatch({ eventConfig, event });
       }
     }
   }
@@ -43,7 +45,7 @@ export default class EventDispatcher {
       transport: string,
     },
     messageBody: messageBody
-  }): Promise<boolean> => {
+  }): Promise<void> => {
     const {
       transport,
     } = eventConfig;
@@ -54,9 +56,9 @@ export default class EventDispatcher {
     } = this.config.transports[transport];
 
     const connection = await amqpConnect(connectionString);
+    const channel = await connection.createChannel();
 
     try {
-      const channel = await connection.createChannel();
       const { type: key } = messageBody.data;
       const message = JSON.stringify(messageBody);
 
@@ -67,11 +69,19 @@ export default class EventDispatcher {
         exchange,
       });
 
-      connection.close();
-      return true;
-    } catch (error) {
-      connection.close();
-      return false;
+      if (typeof this.onDispatched === 'function') {
+        this.onDispatched({
+          message: messageBody,
+          key,
+          exchangeName: exchange.name
+        });
+      }
+
+      await channel.close();
+      await connection.close();
+    } catch (e) {
+      await channel.close();
+      await connection.close();
     }
   };
 
@@ -83,7 +93,7 @@ export default class EventDispatcher {
       transport: string,
     },
     event: EventInterface
-  }): Promise<boolean> => {
+  }): Promise<void> => {
     const [company, context, version, , entity, name] = event.getName().split('.');
     const messageBody = createCommand({
       payload: event.getPayload(),
@@ -108,7 +118,7 @@ export default class EventDispatcher {
       transport: string,
     },
     event: EventInterface
-  }): Promise<boolean> => {
+  }): Promise<void> => {
     const [company, context, version, , entity, name] = event.getName().split('.');
     const messageBody = createEvent({
       payload: event.getPayload(),

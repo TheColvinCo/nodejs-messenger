@@ -1,5 +1,5 @@
 import { amqpConnect, toJSON, retryable } from '../utils';
-import { getCommandEmitter } from '../container/pubSubInitialization.js';
+import { getCommandEmitter } from '../container/pubSubInitialization';
 import { config as configType } from '../types';
 import { EventEmitter } from 'events';
 import { Channel, Message } from 'amqplib';

@@ -1,10 +1,10 @@
-import EventDispatcher from '../emitter/EventDispatcher.js';
-import DomainEventEmitter from '../emitter/DomainEventEmitter.js';
-import CommandEmitter from '../emitter/CommandEmitter.js';
-import domainEventSubscriber from '../subscribers/domainEventSubscriber.js';
-import commandSubscriber from '../subscribers/commandSubscriber.js';
+import EventDispatcher from '../emitter/EventDispatcher';
+import DomainEventEmitter from '../emitter/DomainEventEmitter';
+import CommandEmitter from '../emitter/CommandEmitter';
+import domainEventSubscriber from '../subscribers/domainEventSubscriber';
+import commandSubscriber from '../subscribers/commandSubscriber';
 import { EventEmitter } from 'events';
-import { config as configType } from '../types';
+import { config as configType, messageBody } from "../types";
 
 let commandEmitter = null;
 let domainEventEmitter = null;
@@ -17,7 +17,7 @@ export const getDomainEventsEmitter = (): EventEmitter => {
   return domainEventEmitter;
 };
 
-const subscribersInitialization = async ({
+const subscribersInitialization = ({
   subscribers,
   eventDispatcher,
   // eslint-disable-next-line no-shadow
@@ -29,11 +29,11 @@ const subscribersInitialization = async ({
   eventDispatcher: EventDispatcher,
   domainEventEmitter: EventEmitter,
   commandEmitter: EventEmitter,
-}) => {
+}): void => {
   if (subscribers.domainEvents) {
-    await Promise.all(subscribers.domainEvents.map(async ({ eventName, commandsPath }) => {
+    subscribers.domainEvents.map(async ({ eventName, commandsPath }) => {
       try {
-        domainEventSubscriber.subscribe({
+        await domainEventSubscriber.subscribe({
           eventDispatcher,
           emitter: domainEventEmitter,
           eventName,
@@ -42,11 +42,11 @@ const subscribersInitialization = async ({
       } catch (error) {
         throw new Error(`Subscriber with event '${eventName}' not found. Error ${error.message}`);
       }
-    }));
+    });
   }
 
   if (subscribers.commands) {
-    await Promise.all(subscribers.commands.map(async ({ eventName, handlerFactory, commandPath }) => {
+    subscribers.commands.map(async ({ eventName, handlerFactory, commandPath }) => {
       try {
         await commandSubscriber.subscribe({
           emitter: commandEmitter,
@@ -57,16 +57,20 @@ const subscribersInitialization = async ({
       } catch (error) {
         throw new Error(`Subscriber with event '${eventName}' not found. Error ${error.message}`);
       }
-    }));
+    });
   }
 };
 
-export const pubSubInitialization = (({ config }: { config: configType }): {
+export const pubSubInitialization = (({ config, onDispatched }: {
+  config: configType,
+  onDispatched?: ({ message, key, exchangeName }: { message: messageBody; key: string; exchangeName: string; }) => void
+}): {
   eventDispatcher: EventDispatcher,
   domainEventEmitter: EventEmitter,
   commandEmitter: EventEmitter,
 } => {
-  const eventDispatcher = new EventDispatcher({ config });
+
+  const eventDispatcher = new EventDispatcher({ config, onDispatched });
   domainEventEmitter = new DomainEventEmitter();
   commandEmitter = new CommandEmitter();
   const { subscribers } = config;
