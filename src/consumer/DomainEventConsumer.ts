@@ -1,6 +1,6 @@
 import { amqpConnect, toJSON } from '../utils';
 import { getDomainEventsEmitter } from '../container/pubSubInitialization';
-import { config as configType } from '../types';
+import { config as configType, messageBody } from '../types';
 import { EventEmitter } from 'events';
 import { Channel, Message } from 'amqplib';
 
@@ -18,8 +18,8 @@ export default class DomainEventConsumer {
     emitter = null,
     onError,
     eventualConsistency = {
-      isConsistent: async (message: any) => true,
-      saveMessage: async (message: any) => undefined,
+      isConsistent: async (message: messageBody) => true,
+      saveMessage: async (message: messageBody) => undefined,
     },
   }: {
     transport: string,
@@ -27,9 +27,9 @@ export default class DomainEventConsumer {
     prefetchValue: number,
     emitter?: EventEmitter,
     onError: (error: Error) => void,
-    eventualConsistency: {
-      isConsistent: (message: any) => Promise<boolean>,
-      saveMessage?: (message: any) => Promise<void>
+    eventualConsistency?: {
+      isConsistent: (message: messageBody) => Promise<boolean>,
+      saveMessage?: (message: messageBody) => Promise<void>
     },
   }): Promise<void>{
     if (!this.transports[transport]) {
@@ -85,8 +85,8 @@ export default class DomainEventConsumer {
     emitter: EventEmitter,
     onError: (error: Error) => void,
     eventualConsistency: {
-      isConsistent: (message: any) => Promise<boolean>,
-      saveMessage?: (message: any) => Promise<void>
+      isConsistent: (message: messageBody) => Promise<boolean>,
+      saveMessage?: (message: messageBody) => Promise<void>
     }
     }) {
     return async (msg: Message): Promise<void> => {
@@ -98,7 +98,7 @@ export default class DomainEventConsumer {
         const isConsistent = await eventualConsistency.isConsistent(message);
         if(!isConsistent) {
           channel.ack(msg);
-         return;
+          return;
         }
 
         emitter.emit(eventName, { message });

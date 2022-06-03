@@ -1,6 +1,6 @@
 import { amqpConnect, toJSON, retryable } from '../utils';
 import { getCommandEmitter } from '../container/pubSubInitialization';
-import { config as configType } from '../types';
+import { config as configType, messageBody } from '../types';
 import { EventEmitter } from 'events';
 import { Channel, Message } from 'amqplib';
 
@@ -18,18 +18,18 @@ export default class CommandConsumer {
     emitter = null,
     onError,
     eventualConsistency = {
-      isConsistent: async (message: any)=> true,
-      saveMessage: async (message: any) => undefined,
+      isConsistent: async (message: messageBody)=> true,
+      saveMessage: async (message: messageBody) => undefined,
     },
   }: {
     transport: string,
     queueName: string,
     prefetchValue: number,
     emitter?: EventEmitter,
-    onError: (error: Error) => void,
-    eventualConsistency: {
-      isConsistent: (message: any) => Promise<boolean>,
-      saveMessage?: (message: any) => Promise<void>
+    onError: ({error, message}: {error: Error, message: messageBody}) => void,
+    eventualConsistency?: {
+      isConsistent: (message: messageBody) => Promise<boolean>,
+      saveMessage?: (message: messageBody) => Promise<void>
     },
   }): Promise<void> {
     if (!this.transports[transport]) {
@@ -98,10 +98,10 @@ export default class CommandConsumer {
       onRejected?: (message: Message) => void
     },
     queueName: string,
-    onError: (error: Error) => void,
+    onError: ({error, message}: {error: Error, message: messageBody}) => void,
     eventualConsistency: {
-      isConsistent: (message: any) => Promise<boolean>,
-      saveMessage?: (message: any) => Promise<void>
+      isConsistent: (message: messageBody) => Promise<boolean>,
+      saveMessage?: (message: messageBody) => Promise<void>
     }
   }) {
     return async (msg: Message): Promise<void> => {
@@ -113,7 +113,7 @@ export default class CommandConsumer {
         const onErrorCallback = ({ error }) => {
           if (!retryPolicy) channel.nack(msg, false, false);
 
-          if (onError) onError(error);
+          if (onError) onError({error, message});
 
           const {
             maxRetries,
@@ -142,7 +142,7 @@ export default class CommandConsumer {
         };
 
         const isConsistent = await eventualConsistency.isConsistent(message);
-        if(isConsistent) {
+        if(!isConsistent) {
           channel.ack(msg);
          return;
         }
