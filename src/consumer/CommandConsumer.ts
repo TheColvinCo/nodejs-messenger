@@ -26,7 +26,7 @@ export default class CommandConsumer {
     queueName: string,
     prefetchValue: number,
     emitter?: EventEmitter,
-    onError: ({error, message}: {error: Error, message: messageBody}) => void,
+    onError: ({error, message}: {error: Error, message?: messageBody}) => void,
     eventualConsistency?: {
       isConsistent: (message: messageBody) => Promise<boolean>,
       saveMessage?: (message: messageBody) => Promise<void>
@@ -75,7 +75,7 @@ export default class CommandConsumer {
         },
       );
     } catch (error) {
-      if (onError) onError(error);
+      if (onError) onError({ error });
       connection.close();
       throw error;
     }
@@ -98,7 +98,7 @@ export default class CommandConsumer {
       onRejected?: (message: Message) => void
     },
     queueName: string,
-    onError: ({error, message}: {error: Error, message: messageBody}) => void,
+    onError: ({ error, message }: {error: Error, message: messageBody}) => void,
     eventualConsistency: {
       isConsistent: (message: messageBody) => Promise<boolean>,
       saveMessage?: (message: messageBody) => Promise<void>
@@ -113,7 +113,7 @@ export default class CommandConsumer {
         const onErrorCallback = ({ error }) => {
           if (!retryPolicy) channel.nack(msg, false, false);
 
-          if (onError) onError({error, message});
+          if (onError) onError({ error, message });
 
           const {
             maxRetries,
@@ -150,7 +150,7 @@ export default class CommandConsumer {
         eventualConsistency.saveMessage && await eventualConsistency.saveMessage(message);
         emitter.emit(eventName, { message, onSuccess, onError: onErrorCallback });
       } catch (error) {
-        if (onError) onError(error);
+        if (onError) onError({ error, message });
         channel.nack(msg, false, false);
       }
     };
