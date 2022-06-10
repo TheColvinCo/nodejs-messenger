@@ -26,7 +26,7 @@ export default class DomainEventConsumer {
     queueName: string,
     prefetchValue: number,
     emitter?: EventEmitter,
-    onError: ({error, message}: {error: Error, message?: messageBody}) => void,
+    onError: ({error, message}: {error: Error, message?: messageBody}) => Promise<void>,
     eventualConsistency?: {
       isConsistent: (message: messageBody) => Promise<boolean>,
       saveMessage?: (message: messageBody) => Promise<void>
@@ -69,7 +69,7 @@ export default class DomainEventConsumer {
         consumerData.options,
       );
     } catch (error) {
-      if (onError) onError({ error });
+      if (onError) await onError({ error });
       connection.close();
       throw error;
     }
@@ -83,7 +83,7 @@ export default class DomainEventConsumer {
   }: {
     channel: Channel,
     emitter: EventEmitter,
-    onError: ({error, message}: {error: Error, message: messageBody}) => void,
+    onError: ({error, message}: {error: Error, message: messageBody}) => Promise<void>,
     eventualConsistency: {
       isConsistent: (message: messageBody) => Promise<boolean>,
       saveMessage?: (message: messageBody) => Promise<void>
@@ -105,7 +105,7 @@ export default class DomainEventConsumer {
         eventualConsistency.saveMessage && await eventualConsistency.saveMessage(message);
         channel.ack(msg);
       } catch (error) {
-        if (onError) onError({ error, message });
+        if (onError) await onError({ error, message });
         console.error(`Domain event consumer error occurred: ${error.message}`);
         channel.nack(msg, false, false);
       }
