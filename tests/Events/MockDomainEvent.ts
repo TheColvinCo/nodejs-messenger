@@ -17,6 +17,10 @@ export class MockDomainEvent extends DomainEvent {
     return 'mock';
   }
 
+  getEntityId(): string {
+    return 'mock_1';
+  }
+
   getPayload(): unknown {
     return {
       foo: 'bar'
