@@ -9,13 +9,13 @@ export default class CommandEmitter extends EventEmitter {
     }: {
       message: unknown,
       onSuccess?: () => void,
-      onError?: ({ error }: { error: Error }) => void,
+      onError?: ({ error }: { error: Error }) => Promise<void>,
     }): Promise<void> => {
       try {
         await originalFunction(message);
         if (onSuccess) onSuccess();
       } catch (error) {
-        if (onError) onError({ error });
+        if (onError) await onError({ error });
       }
     };
 

@@ -1,6 +1,6 @@
 import { amqpConnect, toJSON, retryable } from '../utils';
 import { getCommandEmitter } from '../container/pubSubInitialization';
-import { config as configType } from '../types';
+import { config as configType, messageBody } from '../types';
 import { EventEmitter } from 'events';
 import { Channel, Message } from 'amqplib';
 
@@ -17,12 +17,20 @@ export default class CommandConsumer {
     prefetchValue,
     emitter = null,
     onError,
+    eventualConsistency = {
+      isConsistent: async (message: messageBody)=> true,
+      saveMessage: async (message: messageBody) => undefined,
+    },
   }: {
     transport: string,
     queueName: string,
     prefetchValue: number,
-    emitter?: EventEmitter
-    onError: (error: Error) => void,
+    emitter?: EventEmitter,
+    onError: ({error, message}: {error: Error, message?: messageBody}) => Promise<void>,
+    eventualConsistency?: {
+      isConsistent: (message: messageBody) => Promise<boolean>,
+      saveMessage?: (message: messageBody) => Promise<void>
+    },
   }): Promise<void> {
     if (!this.transports[transport]) {
       throw Error(`Transport ${transport} is not defined`);
@@ -56,6 +64,7 @@ export default class CommandConsumer {
         retryPolicy,
         queueName,
         onError,
+        eventualConsistency,
       });
 
       channel.consume(
@@ -66,7 +75,7 @@ export default class CommandConsumer {
         },
       );
     } catch (error) {
-      if (onError) onError(error);
+      if (onError) await onError({ error });
       connection.close();
       throw error;
     }
@@ -77,7 +86,8 @@ export default class CommandConsumer {
     emitter,
     retryPolicy,
     queueName,
-    onError
+    onError,
+    eventualConsistency,
   }: {
     channel: Channel,
     emitter: EventEmitter,
@@ -88,7 +98,11 @@ export default class CommandConsumer {
       onRejected?: (message: Message) => void
     },
     queueName: string,
-    onError: (error: Error) => void,
+    onError: ({ error, message }: {error: Error, message: messageBody}) => Promise<void>,
+    eventualConsistency: {
+      isConsistent: (message: messageBody) => Promise<boolean>,
+      saveMessage?: (message: messageBody) => Promise<void>
+    }
   }) {
     return async (msg: Message): Promise<void> => {
       const message = toJSON(msg);
@@ -96,10 +110,10 @@ export default class CommandConsumer {
       const { type: eventName } = data;
 
       try {
-        const onErrorCallback = ({ error }) => {
+        const onErrorCallback = async ({ error }) => {
           if (!retryPolicy) channel.nack(msg, false, false);
 
-          if (onError) onError(error);
+          if (onError) await onError({ error, message });
 
           const {
             maxRetries,
@@ -126,9 +140,17 @@ export default class CommandConsumer {
         const onSuccess = () => {
           channel.ack(msg);
         };
+
+        const isConsistent = await eventualConsistency.isConsistent(message);
+        if(!isConsistent) {
+          channel.ack(msg);
+         return;
+        }
+
+        eventualConsistency.saveMessage && await eventualConsistency.saveMessage(message);
         emitter.emit(eventName, { message, onSuccess, onError: onErrorCallback });
       } catch (error) {
-        if (onError) onError(error);
+        if (onError) await onError({ error, message });
         channel.nack(msg, false, false);
       }
     };

@@ -13,6 +13,7 @@ describe('createEvent', () => {
       
       const eventData: message = {
         payload,
+        entityId: payload.id,
         meta: {
           company: 'foo',
           context: 'bar',
@@ -40,6 +41,7 @@ describe('createCommand', () => {
       
       const eventData: message = {
         payload,
+        entityId: payload.id,
         meta: {
           company: 'foo',
           context: 'bar',
