@@ -14,12 +14,12 @@ export default async ({ config }: { config: configType }): Promise<void> => {
     const connection = await amqpConnect(connectionString);
     const channel = await connection.createChannel();
 
-    const { 
+    const {
       name: exchangeName,
       type: exchangeType,
       options: exchangeOptions = {}
     } = exchange;
-    
+
     await channel.assertExchange(
       exchangeName,
       exchangeType,
@@ -31,9 +31,13 @@ export default async ({ config }: { config: configType }): Promise<void> => {
       bindingKey = null,
       options: queueOptions = {},
     }) => {
-      const pattern = bindingKey || '';
+      const bindingKeys = Array.isArray(bindingKey) ? bindingKey : [bindingKey];
       const { queue: assertedQueue } = await channel.assertQueue(queueName, queueOptions);
-      await channel.bindQueue(assertedQueue, exchangeName, pattern);
+
+      for (const bindingKey1 of bindingKeys) {
+        const pattern = bindingKey1 || '';
+        await channel.bindQueue(assertedQueue, exchangeName, pattern);
+      }
     }));
 
     connection.close();
